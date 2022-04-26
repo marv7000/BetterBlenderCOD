@@ -396,7 +396,7 @@ def load(self, context,
             if material_usage_counts[material_usage_index] == 0:
                 # Note: update_data must be True, otherwise - after the first
                 #  material is removed, the indices are invalidated
-                mesh.materials.pop(index=material_index, update_data=True)
+                mesh.materials.pop(index=material_index)
             else:
                 material_index += 1
             material_usage_index += 1

@@ -46,7 +46,7 @@ def mesh_triangulate(mesh, vertex_cleanup):
     bm.to_mesh(mesh)
     bm.free()
 
-    mesh.update(calc_tessface=True)
+    mesh.update(calc_edges=True)
 
 
 def gather_exportable_objects(self, context,
@@ -145,7 +145,8 @@ def material_gen_image_dict(material):
     if not material:
         return out
     unk_count = 0
-    for slot in material.texture_slots:
+    #! Texture slots are deprecated
+    """for slot in material.texture_slots:
         if slot is None:
             continue
         texture = slot.texture
@@ -167,7 +168,7 @@ def material_gen_image_dict(material):
                 out['normal'] = image
             else:
                 out['unk_%d' % unk_count] = image
-                unk_count += 1
+                unk_count += 1"""
     return out
 
 
@@ -240,7 +241,7 @@ class ExportMesh(object):
             self.mesh.calc_normals()
 
         uv_layer = self.mesh.uv_layers.active
-        vc_layer = self.mesh.tessface_vertex_colors.active
+        vc_layer = self.mesh.vertex_colors.active
 
         # Get the vertex layer to use for alpha
         if not use_alpha:
@@ -251,7 +252,7 @@ class ExportMesh(object):
             vca_layer = vc_layer
             # Get the first vertex color layer that isn't active
             #  If one can't be found, fallback to the active layer
-            for layer in self.mesh.tessface_vertex_colors:
+            for layer in self.mesh.vertex_colors:
                 if layer is not vc_layer:
                     vca_layer = layer
                     break
@@ -271,19 +272,20 @@ class ExportMesh(object):
             face.material_id = self.materials[polygon.material_index]
             if vc_layer is not None:
                 vert_colors = vc_layer.data[polygon.index]
-                poly_colors = [vert_colors.color1,
-                               vert_colors.color2, vert_colors.color3]
+                poly_colors = [vert_colors.color[0],
+                               vert_colors.color[1], vert_colors.color[2]]
 
-                # Calculate alpha values for the verts for this polygon
+                #! This code doesn't work anymore
+                """# Calculate alpha values for the verts for this polygon
                 if vca_layer is None:
                     alphas = [alpha_default] * 3
                 else:
                     vert_colors = vca_layer.data[polygon.index]
-                    alphas = [sum(vert_colors.color1) / 3,
-                              sum(vert_colors.color2) / 3,
-                              sum(vert_colors.color3) / 3]
+                    alphas = [sum(vert_colors.color[0]) / 3,
+                              sum(vert_colors.color[1]) / 3,
+                              sum(vert_colors.color[2]) / 3]"""
 
-                colors = [tuple(c) + (a,) for c, a in zip(poly_colors, alphas)]
+                colors = [(vert_colors.color[0],vert_colors.color[1], vert_colors.color[2], alpha_default)] * 4
             else:
                 colors = [(1.0, 1.0, 1.0, alpha_default)] * 4
             for i, loop_index in enumerate(polygon.loop_indices):
@@ -499,17 +501,19 @@ def save_model(self, context, filepath, armature, objects,
             mesh.user_clear()
             bpy.data.meshes.remove(mesh)
             continue
-        if len(mesh.tessfaces) < 1:
+        #! mesh.tessfaces is deprecated
+        """if len(mesh.loop_triangles) < 1:
             _skip_notice(ob.name, mesh.name, "No faces")
             mesh.user_clear()
             bpy.data.meshes.remove(mesh)
-            continue
+            continue"""
 
-        if not mesh.tessface_uv_textures:
+        #! DEPRECATED
+        """if not mesh.tessface_uv_textures:
             _skip_notice(ob.name, mesh.name, "No UV texture, not unwrapped?")
             mesh.user_clear()
             bpy.data.meshes.remove(mesh)
-            continue
+            continue"""
 
         meshes.append(ExportMesh(ob, mesh, materials))
 
