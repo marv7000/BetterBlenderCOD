@@ -589,9 +589,7 @@ def save_model(self, context, filepath, armature, objects,
         model.WriteFile_Raw(filepath, version=version,
                             header_message=header_msg)
 
-    # Remove meshes, which were made by to_mesh()
-    for mesh in meshes:
-        mesh.clear()
+   
 
     # Do we need this view_layer.update?
     context.view_layer.update()
